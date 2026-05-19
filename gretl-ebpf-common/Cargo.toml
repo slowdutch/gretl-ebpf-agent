@@ -1,0 +1,15 @@
+[package]
+name = "gretl-ebpf-common"
+version = "0.1.0"
+edition = "2021"
+
+# no_std so this can be used in both kernel (eBPF) and userspace crates
+[features]
+default = []
+user = []          # enables std derives (serde etc) for userspace use
+
+[dependencies]
+serde = { version = "1", features = ["derive"], optional = true }
+
+[target.'cfg(feature = "user")'.dependencies]
+serde = { version = "1", features = ["derive"] }

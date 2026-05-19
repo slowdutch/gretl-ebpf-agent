@@ -1,0 +1,13 @@
+[package]
+name = "gretl-ebpf-ebpf"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+aya-ebpf     = { version = "0.1", features = ["ring-buf"] }
+aya-log-ebpf = "0.1"
+gretl-ebpf-common = { path = "../gretl-ebpf-common" }
+
+[profile.release]
+opt-level = 3
+lto = true

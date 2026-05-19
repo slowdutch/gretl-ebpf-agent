@@ -1,0 +1,16 @@
+[workspace]
+members = [
+    "gretl-ebpf-common",
+    "gretl-ebpf-ebpf",
+    "gretl-ebpf-agent",
+]
+resolver = "2"
+
+[profile.dev]
+opt-level = 3      # eBPF programs need optimisation even in dev
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 3
+strip = true

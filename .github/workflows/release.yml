@@ -1,0 +1,94 @@
+name: Release gretl-ebpf
+
+on:
+  push:
+    tags: ["v*"]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-musl
+            arch:   amd64
+          - target: aarch64-unknown-linux-musl
+            arch:   arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust nightly + BPF target
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: ${{ matrix.target }},bpfel-unknown-none
+          components: rust-src
+
+      - name: Install bpf-linker
+        run: cargo install bpf-linker --no-default-features
+
+      - name: Install musl cross toolchain
+        run: |
+          if [ "${{ matrix.arch }}" = "amd64" ]; then
+            sudo apt-get install -y musl-tools
+          else
+            sudo apt-get install -y gcc-aarch64-linux-gnu
+            curl -fsSL https://more.musl.cc/aarch64-linux-musl-cross.tgz | \
+              tar -xz -C /opt
+            echo "/opt/aarch64-linux-musl-cross/bin" >> $GITHUB_PATH
+          fi
+
+      - name: Build
+        env:
+          RUSTFLAGS: "-C target-feature=+crt-static"
+        run: |
+          cargo build \
+            --release \
+            --target ${{ matrix.target }} \
+            --package gretl-ebpf-agent
+
+      - name: Rename binary
+        run: |
+          cp target/${{ matrix.target }}/release/gretl-ebpf \
+             gretl-ebpf-linux-${{ matrix.arch }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gretl-ebpf-linux-${{ matrix.arch }}
+          path: gretl-ebpf-linux-${{ matrix.arch }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: gretl-ebpf-linux-*
+          generate_release_notes: true
+
+      - name: Publish to gretl.dev/releases/
+        env:
+          DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_KEY }}
+        run: |
+          # Upload to the same Vercel/CDN bucket that serves gretl.dev/releases/
+          # These binaries are fetched by install-agent.sh
+          for arch in amd64 arm64; do
+            curl -fsSL -X PUT \
+              -H "Authorization: Bearer $DEPLOY_KEY" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary "@gretl-ebpf-linux-${arch}" \
+              "https://api.gretl.dev/releases/upload?name=gretl-ebpf-linux-${arch}"
+          done

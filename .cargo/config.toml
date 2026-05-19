@@ -1,0 +1,9 @@
+[build]
+# Host target — used by the userspace agent crate.
+# The eBPF programs crate has its own .cargo/config.toml that overrides this.
+
+[target.x86_64-unknown-linux-musl]
+linker = "x86_64-linux-musl-gcc"
+
+[target.aarch64-unknown-linux-musl]
+linker = "aarch64-linux-musl-gcc"
