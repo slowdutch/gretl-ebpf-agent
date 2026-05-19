@@ -25,7 +25,7 @@ jobs:
       - name: Install Rust nightly + BPF target
         uses: dtolnay/rust-toolchain@nightly
         with:
-          targets: ${{ matrix.target }},bpfel-unknown-none
+          targets: ${{ matrix.target }}
           components: rust-src
 
       - name: Install bpf-linker
