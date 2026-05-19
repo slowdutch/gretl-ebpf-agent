@@ -28,6 +28,12 @@ jobs:
           targets: ${{ matrix.target }}
           components: rust-src
 
+      - name: Install LLVM
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y llvm-14 llvm-14-dev clang-14
+          sudo ln -sf /usr/bin/llvm-config-14 /usr/bin/llvm-config
+
       - name: Install bpf-linker
         run: cargo install bpf-linker --no-default-features
 
