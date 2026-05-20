@@ -7,9 +7,6 @@ edition = "2021"
 name = "gretl-ebpf"
 path = "src/main.rs"
 
-[build-dependencies]
-aya-build = "0.1"
-
 [dependencies]
 # eBPF loader
 aya        = { version = "0.13", features = ["async_tokio"] }
