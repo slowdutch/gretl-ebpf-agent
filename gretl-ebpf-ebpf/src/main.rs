@@ -46,7 +46,7 @@ fn try_execve(ctx: TracePointContext) -> Result<(), i64> {
     };
 
     // bpf_get_current_comm() returns [u8; 16] in aya-ebpf 0.1
-    event.comm = bpf_get_current_comm();
+    if let Ok(comm) = bpf_get_current_comm() { event.comm = comm; }
 
     if !filename_ptr.is_null() {
         let _ = unsafe {
@@ -118,7 +118,7 @@ fn try_tcp_connect_entry(ctx: ProbeContext) -> Result<(), i64> {
         direction: 0,
         _pad2:     [0u8; 3],
     };
-    event.comm = bpf_get_current_comm();
+    if let Ok(comm) = bpf_get_current_comm() { event.comm = comm; }
 
     unsafe {
         event.dst_addr = u32::from_be(*(sk.add(0) as *const u32));
@@ -179,7 +179,7 @@ fn try_tcp_accept(ctx: RetProbeContext) -> Result<(), i64> {
         direction: 1,
         _pad2:     [0u8; 3],
     };
-    event.comm = bpf_get_current_comm();
+    if let Ok(comm) = bpf_get_current_comm() { event.comm = comm; }
 
     unsafe {
         event.src_addr = u32::from_be(*(sk.add(4) as *const u32));
