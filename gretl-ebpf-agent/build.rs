@@ -36,7 +36,7 @@ fn main() {
     assert!(status.success(), "eBPF program build failed");
 
     // Copy the compiled ELF to OUT_DIR where include_bytes_aligned! expects it.
-    let binary_name = "gretl_ebpf_ebpf";
+    let binary_name = "gretl-ebpf-ebpf";
     let compiled = workspace_root
         .join("target-ebpf")
         .join(target)
