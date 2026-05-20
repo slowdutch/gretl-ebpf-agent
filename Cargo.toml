@@ -1,8 +1,10 @@
 [workspace]
 members = [
     "gretl-ebpf-common",
-    "gretl-ebpf-ebpf",
     "gretl-ebpf-agent",
+]
+exclude = [
+    "gretl-ebpf-ebpf",
 ]
 resolver = "2"
 
