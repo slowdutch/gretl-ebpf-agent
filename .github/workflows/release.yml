@@ -28,39 +28,26 @@ jobs:
           targets: ${{ matrix.target }}
           components: rust-src
 
-      - name: Install clang
+      - name: Install clang and Zig
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y clang
+          sudo apt-get install -y clang python3-pip
+          pip3 install ziglang
 
-      - name: Cache bpf-linker
+      - name: Cache bpf-linker and cargo-zigbuild
         uses: actions/cache@v4
         with:
-          path: ~/.cargo/bin/bpf-linker
-          key: bpf-linker-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          path: ~/.cargo/bin
+          key: cargo-tools-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Install bpf-linker
+      - name: Install cargo tools
         run: |
-          if ! command -v bpf-linker &>/dev/null; then
-            cargo install bpf-linker
-          fi
-
-      - name: Install musl cross toolchain
-        run: |
-          if [ "${{ matrix.arch }}" = "amd64" ]; then
-            sudo apt-get install -y musl-tools
-          else
-            sudo apt-get install -y gcc-aarch64-linux-gnu
-            curl -fsSL https://musl.cc/aarch64-linux-musl-cross.tgz | \
-              tar -xz -C /opt
-            echo "/opt/aarch64-linux-musl-cross/bin" >> $GITHUB_PATH
-          fi
+          command -v bpf-linker   || cargo install bpf-linker
+          command -v cargo-zigbuild || cargo install cargo-zigbuild
 
       - name: Build
-        env:
-          RUSTFLAGS: "-C target-feature=+crt-static"
         run: |
-          cargo build \
+          cargo zigbuild \
             --release \
             --target ${{ matrix.target }} \
             --package gretl-ebpf-agent
@@ -97,8 +84,6 @@ jobs:
         env:
           DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_KEY }}
         run: |
-          # Upload to the same Vercel/CDN bucket that serves gretl.dev/releases/
-          # These binaries are fetched by install-agent.sh
           for arch in amd64 arm64; do
             curl -fsSL -X PUT \
               -H "Authorization: Bearer $DEPLOY_KEY" \
