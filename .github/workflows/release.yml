@@ -80,14 +80,3 @@ jobs:
           files: gretl-ebpf-linux-*
           generate_release_notes: true
 
-      - name: Publish to gretl.dev/releases/
-        env:
-          DEPLOY_KEY: ${{ secrets.RELEASE_DEPLOY_KEY }}
-        run: |
-          for arch in amd64 arm64; do
-            curl -fsSL -X PUT \
-              -H "Authorization: Bearer $DEPLOY_KEY" \
-              -H "Content-Type: application/octet-stream" \
-              --data-binary "@gretl-ebpf-linux-${arch}" \
-              "https://api.gretl.dev/releases/upload?name=gretl-ebpf-linux-${arch}"
-          done
